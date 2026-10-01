@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --azul: #042f66;
+  --azul-2: #073d83;
+  --azul-3: #eef5ff;
+  --dorado: #f2ad00;
+  --dorado-2: #ffd15c;
+  --negro: #1d1d1b;
+  --blanco: #ffffff;
+  --gris-50: #f8fafc;
+  --gris-100: #f1f5f9;
+  --gris-200: #e2e8f0;
+  --gris-500: #64748b;
+  --gris-700: #334155;
+  --rojo: #b91c1c;
+  --verde: #047857;
+  --radius-lg: 28px;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 18px 48px rgba(4, 47, 102, 0.10);
+  --shadow-soft: 0 10px 28px rgba(29, 29, 27, 0.08);
+  --max: 1180px;
+  --ease: 180ms ease;
+}
+
+body {
+  color: var(--negro);
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 46%, #ffffff 100%);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.dark body {
+  background: #121316;
+  color: #f1f5f9;
+}
+
+/* Custom Institutional Styling Classes */
+.bg-institutional-blue { background-color: var(--azul); }
+.bg-institutional-blue-2 { background-color: var(--azul-2); }
+.bg-institutional-blue-light { background-color: var(--azul-3); }
+.text-institutional-blue { color: var(--azul); }
+.bg-institutional-gold { background-color: var(--dorado); }
+.text-institutional-gold { color: var(--dorado); }
+.border-institutional-blue { border-color: rgba(4, 47, 102, 0.15); }
+.border-institutional-gold { border-color: rgba(242, 173, 0, 0.40); }
+.shadow-institutional { box-shadow: var(--shadow); }
+.shadow-institutional-soft { box-shadow: var(--shadow-soft); }

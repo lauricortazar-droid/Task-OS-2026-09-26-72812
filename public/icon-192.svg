@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#042f66" />
+      <stop offset="100%" stop-color="#071e3d" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffd54f" />
+      <stop offset="100%" stop-color="#f2ad00" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bgGrad)" />
+  <circle cx="96" cy="96" r="64" fill="#ffffff" fill-opacity="0.08" />
+  <!-- Flame & checkmark symbol -->
+  <path d="M96 38 C90 56 72 70 72 94 C72 114 84 130 102 130 C120 130 132 114 132 94 C132 82 126 72 120 64 C118 78 108 88 98 88 C94 88 90 86 88 82 C84 74 92 56 96 38 Z" fill="url(#goldGrad)" />
+  <circle cx="140" cy="52" r="14" fill="#10b981" stroke="#ffffff" stroke-width="3" />
+</svg>

@@ -1,0 +1,166 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['userId', 'tarea', 'estado', 'fechaIngreso']) &&
+             data.keys().hasOnly(['userId', 'tarea', 'estado', 'fechaIngreso', 'fechaLimite', 'dominio', 'etiquetas', 'notas', 'solicitante', 'telefono', 'contacto', 'id', 'resources', 'googleTaskId', 'googleCalendarEventId', 'googleCalendarHtmlLink', 'googleSyncStatus', 'lastGoogleSync', 'imagenReferencia', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.tarea is string && data.tarea.size() > 0 && data.tarea.size() <= 1000 &&
+             data.estado is string && data.estado in ['Pendiente', 'En Proceso', 'Completada', 'Completado'] &&
+             data.fechaIngreso is string && data.fechaIngreso.size() <= 30 &&
+             (!('fechaLimite' in data) || (data.fechaLimite is string && data.fechaLimite.size() <= 30)) &&
+             (!('dominio' in data) || (data.dominio is string && data.dominio.size() <= 100)) &&
+             (!('notas' in data) || (data.notas is string && data.notas.size() <= 5000)) &&
+             (!('solicitante' in data) || (data.solicitante is string && data.solicitante.size() <= 150)) &&
+             (!('telefono' in data) || (data.telefono is string && data.telefono.size() <= 50)) &&
+             (!('googleTaskId' in data) || (data.googleTaskId is string && data.googleTaskId.size() <= 200)) &&
+             (!('googleCalendarEventId' in data) || (data.googleCalendarEventId is string && data.googleCalendarEventId.size() <= 200)) &&
+             (!('googleCalendarHtmlLink' in data) || (data.googleCalendarHtmlLink is string && data.googleCalendarHtmlLink.size() <= 1000)) &&
+             (!('googleSyncStatus' in data) || (data.googleSyncStatus is string && data.googleSyncStatus.size() <= 30)) &&
+             (!('lastGoogleSync' in data) || (data.lastGoogleSync is string && data.lastGoogleSync.size() <= 50)) &&
+             (!('imagenReferencia' in data) || (data.imagenReferencia is string && data.imagenReferencia.size() <= 50000)) &&
+             (!('resources' in data) || (data.resources is list && data.resources.size() <= 50)) &&
+             (!('etiquetas' in data) || (data.etiquetas is list && data.etiquetas.size() <= 20));
+    }
+
+    function isValidGlobalResource(data) {
+      return data.keys().hasAll(['userId', 'url', 'title', 'keywords', 'savedAt']) &&
+             data.keys().hasOnly(['userId', 'url', 'title', 'keywords', 'savedAt', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.url is string && data.url.size() > 0 && data.url.size() <= 1000 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 300 &&
+             data.keywords is list && data.keywords.size() <= 10 &&
+             data.savedAt is string && data.savedAt.size() <= 50;
+    }
+
+    function isValidUrlLibraryItem(data) {
+      return data.keys().hasAll(['userId', 'url', 'title', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'url', 'title', 'categoria', 'descripcion', 'keywords', 'icon', 'isFavorite', 'clicks', 'createdAt', 'updatedAt', 'lastOpenedAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.url is string && data.url.size() > 0 && data.url.size() <= 1000 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 300 &&
+             data.createdAt is string && data.createdAt.size() <= 50 &&
+             (!('categoria' in data) || (data.categoria is string && data.categoria.size() <= 100)) &&
+             (!('descripcion' in data) || (data.descripcion is string && data.descripcion.size() <= 1000)) &&
+             (!('icon' in data) || (data.icon is string && data.icon.size() <= 1000)) &&
+             (!('isFavorite' in data) || (data.isFavorite is bool)) &&
+             (!('clicks' in data) || (data.clicks is number)) &&
+             (!('keywords' in data) || (data.keywords is list && data.keywords.size() <= 20)) &&
+             (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 50)) &&
+             (!('lastOpenedAt' in data) || (data.lastOpenedAt is string && data.lastOpenedAt.size() <= 50));
+    }
+
+    function isValidProfile(data) {
+      return data.keys().hasAll(['userId']) &&
+             data.keys().hasOnly(['userId', 'email', 'displayName', 'esencialTaskId', 'secundariasTaskIds', 'updatedAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100));
+    }
+
+    function isValidSolicitud(data) {
+      return data.keys().hasAll(['userId', 'solicitante', 'titulo', 'descripcion', 'fechaIngreso', 'leida']) &&
+             data.keys().hasOnly(['userId', 'solicitante', 'telefono', 'email', 'titulo', 'descripcion', 'canal', 'prioridad', 'estado', 'fechaIngreso', 'leida', 'tareaIdAsociada', 'id', 'createdAt', 'updatedAt']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.solicitante is string && data.solicitante.size() > 0 && data.solicitante.size() <= 150 &&
+             data.titulo is string && data.titulo.size() > 0 && data.titulo.size() <= 300 &&
+             data.descripcion is string && data.descripcion.size() <= 5000 &&
+             data.fechaIngreso is string && data.fechaIngreso.size() <= 50 &&
+             data.leida is bool &&
+             (!('telefono' in data) || (data.telefono is string && data.telefono.size() <= 50)) &&
+             (!('email' in data) || (data.email is string && data.email.size() <= 200)) &&
+             (!('canal' in data) || (data.canal is string && data.canal.size() <= 50)) &&
+             (!('prioridad' in data) || (data.prioridad is string && data.prioridad in ['Alta', 'Media', 'Baja'])) &&
+             (!('estado' in data) || (data.estado is string && data.estado in ['Nueva', 'Atendida', 'ConvertidaEnTarea', 'Descartada'])) &&
+             (!('tareaIdAsociada' in data) || (data.tareaIdAsociada is number));
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'tipo', 'titulo', 'mensaje', 'creadaEn', 'leida']) &&
+             data.keys().hasOnly(['userId', 'tipo', 'titulo', 'mensaje', 'solicitante', 'telefono', 'solicitudId', 'tareaId', 'leida', 'creadaEn', 'emailEnviado', 'pushEnviado', 'id']) &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.tipo is string && data.tipo.size() <= 50 &&
+             data.titulo is string && data.titulo.size() <= 300 &&
+             data.mensaje is string && data.mensaje.size() <= 2000 &&
+             data.creadaEn is string && data.creadaEn.size() <= 50 &&
+             data.leida is bool &&
+             (!('solicitante' in data) || (data.solicitante is string && data.solicitante.size() <= 150)) &&
+             (!('telefono' in data) || (data.telefono is string && data.telefono.size() <= 50)) &&
+             (!('solicitudId' in data) || (data.solicitudId is string && data.solicitudId.size() <= 100)) &&
+             (!('tareaId' in data) || (data.tareaId is number)) &&
+             (!('emailEnviado' in data) || (data.emailEnviado is bool)) &&
+             (!('pushEnviado' in data) || (data.pushEnviado is bool));
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+
+      match /profile/info {
+        allow get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidProfile(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidProfile(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId);
+      }
+
+      match /tasks/{taskId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(taskId) && isValidTask(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(taskId) && isValidTask(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(taskId);
+      }
+
+      match /global_resources/{resourceId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(resourceId) && isValidGlobalResource(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(resourceId) && isValidGlobalResource(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(resourceId);
+      }
+
+      match /url_library/{urlId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(urlId) && isValidUrlLibraryItem(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(urlId) && isValidUrlLibraryItem(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(urlId);
+      }
+
+      match /solicitudes/{solicitudId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(solicitudId) && isValidSolicitud(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(solicitudId) && isValidSolicitud(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(solicitudId);
+      }
+
+      match /notifications/{notifId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(userId) && isValidId(notifId) && isValidNotification(incoming());
+        allow update: if isOwner(userId) && isValidId(userId) && isValidId(notifId) && isValidNotification(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(notifId);
+      }
+    }
+  }
+}

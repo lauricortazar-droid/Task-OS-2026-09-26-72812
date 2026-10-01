@@ -1,0 +1,144 @@
+{
+  "entities": {
+    "Task": {
+      "title": "Task",
+      "description": "User executive tasks tracked in the ledger",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "tarea": { "type": "string", "maxLength": 1000, "description": "Task description" },
+        "estado": { "type": "string", "enum": ["Pendiente", "En Proceso", "Completada"], "description": "Task status" },
+        "fechaIngreso": { "type": "string", "maxLength": 30, "description": "Creation date YYYY-MM-DD" },
+        "fechaLimite": { "type": "string", "maxLength": 30, "description": "Due date YYYY-MM-DD" },
+        "dominio": { "type": "string", "maxLength": 100, "description": "Task domain or category" },
+        "etiquetas": { "type": "array", "description": "Tag labels assigned" },
+        "notas": { "type": "string", "maxLength": 5000, "description": "Notes or action items" },
+        "solicitante": { "type": "string", "maxLength": 150, "description": "Requester contact name" },
+        "telefono": { "type": "string", "maxLength": 50, "description": "Requester phone number" },
+        "googleTaskId": { "type": "string", "maxLength": 200, "description": "Google Tasks ID" },
+        "googleCalendarEventId": { "type": "string", "maxLength": 200, "description": "Google Calendar Event ID" },
+        "googleCalendarHtmlLink": { "type": "string", "maxLength": 1000, "description": "Google Calendar direct web link" },
+        "googleSyncStatus": { "type": "string", "maxLength": 30, "description": "Google Sync Status" },
+        "lastGoogleSync": { "type": "string", "maxLength": 50, "description": "Last Google sync timestamp" },
+        "imagenReferencia": { "type": "string", "maxLength": 50000, "description": "Reference image data" },
+        "resources": { "type": "array", "description": "Contextual links and resources attached to this task" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Created at timestamp" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Updated at timestamp" }
+      },
+      "required": ["userId", "tarea", "estado", "fechaIngreso"]
+    },
+    "GlobalResource": {
+      "title": "GlobalResource",
+      "description": "Isolated URL resource saved without active task context, indexed for Universal Search",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "url": { "type": "string", "maxLength": 1000, "description": "Web resource URL" },
+        "title": { "type": "string", "maxLength": 300, "description": "Extracted or inferred title" },
+        "keywords": { "type": "array", "description": "3-5 indexing keywords for universal search" },
+        "savedAt": { "type": "string", "maxLength": 50, "description": "ISO timestamp when saved" }
+      },
+      "required": ["userId", "url", "title", "keywords", "savedAt"]
+    },
+    "UrlLibraryItem": {
+      "title": "UrlLibraryItem",
+      "description": "Daily bookmarks and useful web links library with auto-identified metadata and multiple views",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner user ID" },
+        "url": { "type": "string", "maxLength": 1000, "description": "Web resource URL" },
+        "title": { "type": "string", "maxLength": 300, "description": "Auto-identified or customized title" },
+        "categoria": { "type": "string", "maxLength": 100, "description": "Category or domain" },
+        "descripcion": { "type": "string", "maxLength": 1000, "description": "Short description or notes" },
+        "keywords": { "type": "array", "description": "Tags or keywords for filtering" },
+        "icon": { "type": "string", "maxLength": 1000, "description": "Favicon or icon URL" },
+        "isFavorite": { "type": "boolean", "description": "Marked as daily essential / favorite" },
+        "clicks": { "type": "number", "description": "Times opened" },
+        "createdAt": { "type": "string", "maxLength": 50, "description": "Creation ISO date" },
+        "updatedAt": { "type": "string", "maxLength": 50, "description": "Last update ISO date" },
+        "lastOpenedAt": { "type": "string", "maxLength": 50, "description": "Last opened ISO date" }
+      },
+      "required": ["userId", "url", "title", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User settings and metadata",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "email": { "type": "string", "maxLength": 200, "description": "User email address" },
+        "displayName": { "type": "string", "maxLength": 100, "description": "User display name" },
+        "esencialTaskId": { "type": "number", "description": "Priority Essential task ID" },
+        "secundariasTaskIds": { "type": "array", "description": "Secondary priority task IDs" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Updated timestamp" }
+      },
+      "required": ["userId"]
+    },
+    "Solicitud": {
+      "title": "Solicitud",
+      "description": "Incoming client and executive requests requiring attention, push alert, and email dispatch",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "solicitante": { "type": "string", "maxLength": 150, "description": "Requester name" },
+        "telefono": { "type": "string", "maxLength": 50, "description": "Requester phone number" },
+        "email": { "type": "string", "maxLength": 200, "description": "Requester email address" },
+        "titulo": { "type": "string", "maxLength": 300, "description": "Request title or subject" },
+        "descripcion": { "type": "string", "maxLength": 5000, "description": "Full request details" },
+        "canal": { "type": "string", "maxLength": 50, "description": "Channel of origin (WhatsApp, Web, Input, etc)" },
+        "prioridad": { "type": "string", "enum": ["Alta", "Media", "Baja"], "description": "Priority level" },
+        "estado": { "type": "string", "enum": ["Nueva", "Atendida", "ConvertidaEnTarea", "Descartada"], "description": "Current status" },
+        "fechaIngreso": { "type": "string", "maxLength": 50, "description": "Creation timestamp" },
+        "leida": { "type": "boolean", "description": "Whether request has been read" },
+        "tareaIdAsociada": { "type": "number", "description": "Linked task ID if converted" }
+      },
+      "required": ["userId", "solicitante", "titulo", "descripcion", "fechaIngreso", "leida"]
+    },
+    "NotificationItem": {
+      "title": "NotificationItem",
+      "description": "Notification center alert record with push and email dispatch status",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "User ID" },
+        "tipo": { "type": "string", "maxLength": 50, "description": "Notification category" },
+        "titulo": { "type": "string", "maxLength": 300, "description": "Alert title" },
+        "mensaje": { "type": "string", "maxLength": 2000, "description": "Alert body" },
+        "solicitante": { "type": "string", "maxLength": 150, "description": "Requester name if applicable" },
+        "telefono": { "type": "string", "maxLength": 50, "description": "Requester phone if applicable" },
+        "solicitudId": { "type": "string", "maxLength": 100, "description": "Linked request ID" },
+        "tareaId": { "type": "number", "description": "Linked task ID" },
+        "leida": { "type": "boolean", "description": "Read status" },
+        "creadaEn": { "type": "string", "maxLength": 50, "description": "Creation ISO timestamp" },
+        "emailEnviado": { "type": "boolean", "description": "Email dispatch status" },
+        "pushEnviado": { "type": "boolean", "description": "Push notification dispatch status" }
+      },
+      "required": ["userId", "tipo", "titulo", "mensaje", "creadaEn", "leida"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Collection of tasks owned by a user"
+    },
+    "/users/{userId}/global_resources/{resourceId}": {
+      "schema": "GlobalResource",
+      "description": "Collection of global indexed resources accessible only via Universal Search"
+    },
+    "/users/{userId}/url_library/{urlId}": {
+      "schema": "UrlLibraryItem",
+      "description": "Collection of daily URLs and tools saved by user"
+    },
+    "/users/{userId}/profile/info": {
+      "schema": "UserProfile",
+      "description": "User profile and configuration"
+    },
+    "/users/{userId}/solicitudes/{solicitudId}": {
+      "schema": "Solicitud",
+      "description": "Incoming client requests and solicitations"
+    },
+    "/users/{userId}/notifications/{notifId}": {
+      "schema": "NotificationItem",
+      "description": "User notification center alerts and history"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "Task-OS",
+  "description": "Sistema operativo ejecutivo personal con sincronización en la nube vía Firebase Firestore e integraciones con Google Workspace: Contacts, Calendar, Tasks y Sheets.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

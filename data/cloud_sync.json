@@ -1,0 +1,351 @@
+{
+  "laurcortazar@gmail.com": {
+    "email": "laurcortazar@gmail.com",
+    "tasks": [
+      {
+        "id": 3,
+        "tarea": "Revisar el panel de administración de FGDLL e incluir opción de eliminar centros mañana",
+        "estado": "Completado",
+        "fechaIngreso": "2026-09-21",
+        "fechaLimite": "2026-09-25",
+        "dominio": "Tecnología",
+        "solicitante": "Pepe",
+        "etiquetas": [
+          "Pendiente",
+          "Tecnología"
+        ],
+        "resources": []
+      },
+      {
+        "id": 4,
+        "tarea": "Revisar lista de diplomas y reconocimientos de graduación",
+        "estado": "Completado",
+        "fechaIngreso": "2026-09-28",
+        "dominio": "Laura",
+        "solicitante": "Laura",
+        "contacto": {
+          "nombre": "Laura",
+          "telefono": "+52 55 1234 5678"
+        },
+        "etiquetas": [
+          "Urgente",
+          "Solicitud"
+        ],
+        "notas": "Por favor verificar los nombres de los 45 graduados antes de imprimir los reconocimientos oficiales.",
+        "resources": [
+          {
+            "url": "https://console.firebase.google.com/u/0/project/gen-lang-client-0098696571/authentication/settings",
+            "title": "console.firebase.google.com • u 0 project gen lang client 0098696571 authentication settings",
+            "addedAt": "2026-09-29T15:52:05.623Z"
+          },
+          {
+            "url": "https://github.com/settings/personal-access-tokens",
+            "title": "github.com • settings personal access tokens",
+            "addedAt": "2026-09-29T21:02:30.442Z"
+          },
+          {
+            "url": "https://aistudio.google.com/apps/a4a9487a-3539-450c-9248-34cb640db4e7?project=zinc-citron-442221-m9&showAssistant=true&showPreview=true",
+            "title": "aistudio.google.com • apps a4a9487a 3539 450c 9248 34cb640db4e7",
+            "addedAt": "2026-09-29T21:30:27.285Z"
+          },
+          {
+            "url": "https://aistudio.google.com/apps/90239d7f-e919-4b74-8cf9-4bd6da226df9?showPreview=true&showAssistant=true",
+            "title": "aistudio.google.com • apps 90239d7f e919 4b74 8cf9 4bd6da226df9",
+            "addedAt": "2026-09-29T21:31:28.481Z"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "tarea": "Aprobación de temario y programa del nuevo diplomado",
+        "estado": "Pendiente",
+        "fechaIngreso": "2026-09-29",
+        "dominio": "FGDLL",
+        "solicitante": "Coordinación Universidad FGDLL",
+        "contacto": {
+          "nombre": "Coordinación Universidad FGDLL",
+          "telefono": "+52 55 8765 4321"
+        },
+        "etiquetas": [
+          "Solicitud"
+        ],
+        "notas": "Requerimos visto bueno para publicar la convocatoria y abrir inscripciones esta semana.",
+        "resources": []
+      }
+    ],
+    "globalResources": [
+      {
+        "id": "res-1790801519260-ld8na",
+        "url": "https://console.firebase.google.com/u/0/project/esparta-d60c1/overview",
+        "title": "console.firebase.google.com • u 0 project esparta d60c1 overview",
+        "keywords": [
+          "console",
+          "u",
+          "0",
+          "recurso"
+        ],
+        "savedAt": "2026-09-30T20:51:59.260Z"
+      },
+      {
+        "id": "res-1790717482547-zketv",
+        "url": "https://aistudio.google.com/apps/90239d7f-e919-4b74-8cf9-4bd6da226df9?showPreview=true&showAssistant=true",
+        "title": "Sign in - Google Accounts",
+        "keywords": [
+          "google",
+          "aistudio",
+          "sign",
+          "accounts",
+          "apps"
+        ],
+        "savedAt": "2026-09-29T21:31:22.547Z"
+      }
+    ],
+    "urlLibrary": [
+      {
+        "id": "url-1790697109186-zukp9",
+        "url": "https://aistudio.google.com/api-keys",
+        "title": "aistudio.google.com • api keys",
+        "categoria": "Inteligencia Artificial",
+        "keywords": [
+          "aistudio",
+          "api keys",
+          "recurso",
+          "web"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=aistudio.google.com&sz=64",
+        "isFavorite": true,
+        "clicks": 2,
+        "lastOpenedAt": "2026-09-30T06:50:28.182Z",
+        "createdAt": "2026-09-29T15:51:49.186Z",
+        "updatedAt": "2026-09-29T15:51:49.186Z"
+      },
+      {
+        "id": "url-1790697134481-6cnyz",
+        "url": "https://console.firebase.google.com/u/0/project/gen-lang-client-0098696571/authentication/settings",
+        "title": "console.firebase.google.com • u 0 project gen lang client 0098696571 authentication settings",
+        "categoria": "Herramientas & Web",
+        "keywords": [
+          "console",
+          "u",
+          "0",
+          "recurso"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=console.firebase.google.com&sz=64",
+        "isFavorite": true,
+        "clicks": 1,
+        "createdAt": "2026-09-29T15:52:14.481Z",
+        "updatedAt": "2026-09-29T15:52:14.481Z"
+      },
+      {
+        "id": "url-1790715955208-fm82l",
+        "url": "https://chatgpt.com/g/g-p-69ffe6c1c91c8191814bee6a669c0c12-guia-vobo/c/6a5e70ee-4d50-83e8-b56e-ecb95c72462e",
+        "title": "ChatGPT • Asistente y Modelos de Lenguaje",
+        "categoria": "Inteligencia Artificial",
+        "descripcion": "Modelos de lenguaje y razonamiento de OpenAI para redacción, análisis y consultas.",
+        "keywords": [
+          "chatgpt",
+          "openai",
+          "ia",
+          "asistente",
+          "prompts"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",
+        "isFavorite": true,
+        "clicks": 1,
+        "createdAt": "2026-09-29T21:05:55.208Z",
+        "updatedAt": "2026-09-29T21:05:55.208Z"
+      },
+      {
+        "id": "url-1790801906773-d6w6m",
+        "url": "https://console.firebase.google.com/u/0/project/esparta-d60c1/authentication/users",
+        "title": "console.firebase.google.com • u 0 project esparta d60c1 authentication users",
+        "categoria": "Herramientas & Web",
+        "keywords": [
+          "console",
+          "u",
+          "0",
+          "recurso"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=console.firebase.google.com&sz=64",
+        "isFavorite": true,
+        "clicks": 1,
+        "createdAt": "2026-09-30T20:58:26.773Z",
+        "updatedAt": "2026-09-30T20:58:26.773Z"
+      },
+      {
+        "id": "url-1790590385521-sazhl",
+        "url": "https://github.com/settings/apps",
+        "title": "DEVELOPER GIT",
+        "categoria": "Herramientas & Web",
+        "descripcion": "GitHub is where people build software. More than 150 million people use GitHub to discover, fork, and contribute to over 420 million projects.",
+        "keywords": [
+          "github",
+          "build",
+          "software",
+          "people",
+          "million"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=github.com&sz=64",
+        "isFavorite": false,
+        "clicks": 0,
+        "createdAt": "2026-09-28T10:13:05.521Z",
+        "updatedAt": "2026-09-28T10:13:05.521Z"
+      },
+      {
+        "id": "url-1790697667858-nfcuw",
+        "url": "https://chatgpt.com/c/6abb0f8c-fbd4-83e8-85f4-7380227e4225?temporary-chat=true",
+        "title": "ChatGPT • Asistente y Modelos de Lenguaje",
+        "categoria": "Inteligencia Artificial",
+        "descripcion": "Modelos de lenguaje y razonamiento de OpenAI para redacción, análisis y consultas.",
+        "keywords": [
+          "chatgpt",
+          "openai",
+          "ia",
+          "asistente",
+          "prompts"
+        ],
+        "icon": "https://www.google.com/s2/favicons?domain=chatgpt.com&sz=64",
+        "isFavorite": false,
+        "clicks": 0,
+        "createdAt": "2026-09-29T16:01:07.858Z",
+        "updatedAt": "2026-09-29T16:01:07.858Z"
+      },
+      {
+        "id": "url-1790702550424-uq4i5",
+        "url": "https://github.com",
+        "title": "GitHub",
+        "categoria": "Herramientas & Web",
+        "descripcion": "Repositorio y control de versiones en GitHub",
+        "keywords": ["github", "git", "repositorio"],
+        "icon": "https://www.google.com/s2/favicons?domain=github.com&sz=64",
+        "isFavorite": false,
+        "clicks": 0,
+        "createdAt": "2026-09-29T17:22:30.424Z",
+        "updatedAt": "2026-09-29T17:22:30.424Z"
+      }
+    ],
+    "contacts": [
+      {
+        "id": "c-1",
+        "nombre": "Laura",
+        "telefono": "+52 55 1234 5678",
+        "rol": "Coordinación y Proyectos",
+        "dominio": "Laura"
+      },
+      {
+        "id": "c-2",
+        "nombre": "Líder Zona Tiburón",
+        "telefono": "+52 55 9876 5432",
+        "rol": "Líder de Zona FGDLL",
+        "dominio": "FGDLL"
+      },
+      {
+        "id": "c-3",
+        "nombre": "Director Gladiadores",
+        "telefono": "+52 55 4567 8901",
+        "rol": "Director de Zona",
+        "dominio": "FGDLL"
+      },
+      {
+        "id": "c-4",
+        "nombre": "Proveedor de Lonas",
+        "telefono": "+52 55 2345 6789",
+        "rol": "Taller Impresión y Montaje",
+        "dominio": "Diseño"
+      },
+      {
+        "id": "c-5",
+        "nombre": "Coordinación Universidad FGDLL",
+        "telefono": "+52 55 8765 4321",
+        "rol": "Diplomados y Reconocimientos",
+        "dominio": "Universidad"
+      }
+    ],
+    "tags": [
+      {
+        "id": "tag-1",
+        "nombre": "Urgente",
+        "categoria": "prioridad",
+        "color": "rose"
+      },
+      {
+        "id": "tag-2",
+        "nombre": "Importante",
+        "categoria": "prioridad",
+        "color": "amber"
+      },
+      {
+        "id": "tag-3",
+        "nombre": "Pendiente",
+        "categoria": "prioridad",
+        "color": "blue"
+      },
+      {
+        "id": "tag-4",
+        "nombre": "Delegado",
+        "categoria": "prioridad",
+        "color": "purple"
+      },
+      {
+        "id": "tag-5",
+        "nombre": "Zona Tiburón",
+        "categoria": "zona",
+        "color": "cyan"
+      },
+      {
+        "id": "tag-6",
+        "nombre": "Zona Gladiadores",
+        "categoria": "zona",
+        "color": "orange"
+      },
+      {
+        "id": "tag-7",
+        "nombre": "Zona Águilas",
+        "categoria": "zona",
+        "color": "emerald"
+      },
+      {
+        "id": "tag-8",
+        "nombre": "Zona Centro",
+        "categoria": "zona",
+        "color": "indigo"
+      },
+      {
+        "id": "tag-9",
+        "nombre": "Diseño",
+        "categoria": "area",
+        "color": "pink"
+      },
+      {
+        "id": "tag-10",
+        "nombre": "Tecnología",
+        "categoria": "area",
+        "color": "violet"
+      },
+      {
+        "id": "tag-11",
+        "nombre": "Universidad",
+        "categoria": "area",
+        "color": "teal"
+      },
+      {
+        "id": "tag-12",
+        "nombre": "Reconocimientos",
+        "categoria": "area",
+        "color": "amber"
+      },
+      {
+        "id": "tag-13",
+        "nombre": "Logística",
+        "categoria": "area",
+        "color": "stone"
+      }
+    ],
+    "esencialTaskId": 5,
+    "secundariasTaskIds": [
+      2
+    ],
+    "updatedAt": "2026-10-01T08:36:10.259Z",
+    "deviceName": "Navegador Web"
+  }
+}
