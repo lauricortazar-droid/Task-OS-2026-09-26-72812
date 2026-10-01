@@ -212,12 +212,12 @@
       },
       {
         "id": "url-1790702550424-uq4i5",
-        "url": "https://github.com",
-        "title": "GitHub",
+        "url": "https://github",
+        "title": "token",
         "categoria": "Herramientas & Web",
-        "descripcion": "Repositorio y control de versiones en GitHub",
-        "keywords": ["github", "git", "repositorio"],
-        "icon": "https://www.google.com/s2/favicons?domain=github.com&sz=64",
+        "descripcion": "token_redacted",
+        "keywords": [],
+        "icon": "https://www.google.com/s2/favicons?domain=github&sz=64",
         "isFavorite": false,
         "clicks": 0,
         "createdAt": "2026-09-29T17:22:30.424Z",
@@ -345,7 +345,7 @@
     "secundariasTaskIds": [
       2
     ],
-    "updatedAt": "2026-10-01T08:36:10.259Z",
+    "updatedAt": "2026-10-01T08:53:39.642Z",
     "deviceName": "Navegador Web"
   }
 }

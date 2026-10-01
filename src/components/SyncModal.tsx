@@ -858,9 +858,34 @@ export default function SyncModal({
                     <RefreshCw size={24} className="animate-spin text-stone-400" />
                   </div>
                 )}
-                <span className="text-[11px] font-semibold text-stone-500 mt-2">
-                  Sincronizado con: <span className="text-amber-600 dark:text-amber-400 font-bold">{emailInput}</span>
-                </span>
+                <div className="w-full mt-3 pt-2 border-t border-stone-200 dark:border-stone-700/60">
+                  <div className="text-[11px] font-bold text-stone-600 dark:text-stone-300 mb-1 text-center">
+                    Correo para sincronización:
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="usuario@gmail.com"
+                      className="flex-1 px-3 py-1.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-xs text-stone-900 dark:text-stone-100 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const clean = emailInput.trim().toLowerCase();
+                        if (clean && clean.includes("@")) {
+                          onChangeEmail(clean);
+                          onForceSync();
+                          playChime("success");
+                        }
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold text-xs shadow-xs transition-transform active:scale-95"
+                    >
+                      Conectar
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Share & Copy Link */}

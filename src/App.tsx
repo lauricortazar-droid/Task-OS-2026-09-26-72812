@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import ExecutiveInput from "./components/ExecutiveInput";
 import MessageOutputCard from "./components/MessageOutputCard";
@@ -7,7 +7,7 @@ import LedgerTable from "./components/LedgerTable";
 import ContactsModal from "./components/ContactsModal";
 import TagsModal, { DEFAULT_TAGS } from "./components/TagsModal";
 import SyncModal from "./components/SyncModal";
-import ConnectionSyncMenuModal from "./components/ConnectionSyncMenuModal";
+import ConnectionSyncMenuModal, { NotificationSettings } from "./components/ConnectionSyncMenuModal";
 import GoogleWorkspaceModal from "./components/GoogleWorkspaceModal";
 import MobileNavBar from "./components/MobileNavBar";
 import WeeklyPerformanceDashboard from "./components/WeeklyPerformanceDashboard";
@@ -325,6 +325,50 @@ export default function App() {
     error: null,
   });
 
+  // Auto-Sync & Periodic Polling State
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem("taskos_auto_sync_enabled");
+      if (saved !== null) return saved === "true";
+    } catch (_) {}
+    return true;
+  });
+
+  const [autoSyncInterval, setAutoSyncInterval] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("taskos_auto_sync_interval");
+      if (saved) {
+        const parsed = parseInt(saved, 10);
+        if (parsed > 0) return parsed;
+      }
+    } catch (_) {}
+    return 30;
+  });
+
+  const [secondsUntilSync, setSecondsUntilSync] = useState<number>(30);
+  const [lastSyncTime, setLastSyncTime] = useState<Date>(new Date());
+  const [syncHistory, setSyncHistory] = useState<{ time: string; count: number; email: string }[]>([]);
+  const isInitialSyncCompletedRef = useRef(false);
+
+  // Notification Configuration state
+  const [notifConfig, setNotifConfig] = useState<NotificationSettings>(() => {
+    try {
+      const saved = localStorage.getItem("taskos_notification_config");
+      if (saved) return JSON.parse(saved);
+    } catch (_) {}
+    return {
+      pushEnabled: true,
+      taskCompleted: true,
+      pomodoroEnded: true,
+      newSolicitudes: true,
+      urgentReminders: true,
+      soundChimes: true,
+      soundVolume: 0.8,
+      soundType: "bell",
+      focusDoNotDisturb: false,
+    };
+  });
+
   const [globalResources, setGlobalResources] = useState<GlobalResource[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_GLOBAL_RESOURCES);
@@ -622,7 +666,7 @@ export default function App() {
         const data = await res.json();
 
         if (isMounted) {
-          if (data.success && data.exists && data.data) {
+          if (data.exists && data.data) {
             const cloud = data.data as CloudSyncPayload & {
               globalResources?: GlobalResource[];
               urlLibrary?: UrlLibraryItem[];
@@ -648,15 +692,28 @@ export default function App() {
             if (Array.isArray(cloud.secundariasTaskIds)) {
               setSecundariasTaskIds(cloud.secundariasTaskIds);
             }
+            const syncTime = cloud.updatedAt || new Date().toISOString();
             setSyncStatus({
               email: syncEmail,
               isSyncing: false,
-              lastSyncedAt: cloud.updatedAt || new Date().toISOString(),
+              lastSyncedAt: syncTime,
               error: null,
             });
+            const now = new Date();
+            setLastSyncTime(now);
+            setSyncHistory((prev) => [
+              {
+                time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+                count: Array.isArray(cloud.tasks) ? cloud.tasks.length : tasks.length,
+                email: syncEmail,
+              },
+              ...prev.slice(0, 4),
+            ]);
+            isInitialSyncCompletedRef.current = true;
           } else {
             // First time this email connects or empty cloud: push current local state to cloud
             await pushCloudState(syncEmail, tasks, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds);
+            isInitialSyncCompletedRef.current = true;
           }
         }
       } catch (err: any) {
@@ -668,6 +725,7 @@ export default function App() {
             isSyncing: false,
             error: err.message,
           }));
+          isInitialSyncCompletedRef.current = true;
         }
       }
     }
@@ -680,7 +738,7 @@ export default function App() {
 
   // Debounced auto-push whenever tasks, globalResources, urlLibrary, contacts, or tags change
   useEffect(() => {
-    if (!syncEmail) return;
+    if (!syncEmail || !isInitialSyncCompletedRef.current) return;
 
     const timer = setTimeout(() => {
       setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
@@ -691,24 +749,31 @@ export default function App() {
   }, [tasks, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds, syncEmail]);
 
   const handleChangeSyncEmail = (newEmail: string) => {
-    setSyncEmail(newEmail);
+    const clean = newEmail.trim().toLowerCase();
+    setSyncEmail(clean);
     try {
-      localStorage.setItem(STORAGE_KEY_USER_EMAIL, newEmail);
+      localStorage.setItem(STORAGE_KEY_USER_EMAIL, clean);
     } catch (_) {}
-    setLastActionSummary(`Sincronización vinculada al correo ${newEmail}`);
+    setLastActionSummary(`Sincronización vinculada al correo ${clean}`);
   };
 
-  const handleForceSync = async () => {
-    setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
+  const handleForceSync = async (isBackground = false) => {
+    if (!isBackground) {
+      setSyncStatus((prev) => ({ ...prev, isSyncing: true }));
+    }
     try {
       const res = await fetch(`/api/sync/pull?email=${encodeURIComponent(syncEmail)}`);
       const data = await res.json();
-      if (data.success && data.exists && data.data) {
+      let currentTasksState = tasks;
+      if (data.exists && data.data) {
         const cloud = data.data as CloudSyncPayload & {
           globalResources?: GlobalResource[];
           urlLibrary?: UrlLibraryItem[];
         };
-        if (Array.isArray(cloud.tasks)) setTasks(cloud.tasks);
+        if (Array.isArray(cloud.tasks) && cloud.tasks.length > 0) {
+          setTasks(cloud.tasks);
+          currentTasksState = cloud.tasks;
+        }
         if (Array.isArray(cloud.globalResources)) setGlobalResources(cloud.globalResources);
         if (Array.isArray(cloud.urlLibrary)) setUrlLibrary(cloud.urlLibrary);
         if (Array.isArray(cloud.contacts)) setContacts(cloud.contacts);
@@ -716,11 +781,98 @@ export default function App() {
         if (typeof cloud.esencialTaskId === "number") setEsencialTaskId(cloud.esencialTaskId);
         if (Array.isArray(cloud.secundariasTaskIds)) setSecundariasTaskIds(cloud.secundariasTaskIds);
       }
-      await pushCloudState(syncEmail, tasks, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds);
-      setLastActionSummary(`Sincronización manual completada con ${syncEmail}`);
+      await pushCloudState(syncEmail, currentTasksState, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds);
+      const now = new Date();
+      setLastSyncTime(now);
+      setSyncHistory((prev) => [
+        {
+          time: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+          count: currentTasksState.length,
+          email: syncEmail,
+        },
+        ...prev.slice(0, 4),
+      ]);
+      if (!isBackground) {
+        setLastActionSummary(`Sincronización manual completada con ${syncEmail}`);
+      }
     } catch (err: any) {
       console.error("Force sync failed:", err);
     }
+  };
+
+  // Auto-sync ticker interval countdown
+  useEffect(() => {
+    if (!autoSyncEnabled || !syncEmail) return;
+
+    const interval = setInterval(() => {
+      setSecondsUntilSync((prev) => {
+        if (prev <= 1) {
+          handleForceSync(true);
+          return autoSyncInterval;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [autoSyncEnabled, autoSyncInterval, syncEmail, tasks, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds]);
+
+  // Event-based background sync triggers (Tab Visibility, Window Focus, Online)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && autoSyncEnabled && syncEmail) {
+        handleForceSync(true);
+      }
+    };
+    const handleFocus = () => {
+      if (autoSyncEnabled && syncEmail) {
+        handleForceSync(true);
+      }
+    };
+    const handleOnline = () => {
+      if (syncEmail) {
+        handleForceSync(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [autoSyncEnabled, syncEmail, tasks, globalResources, urlLibrary, contacts, tags, esencialTaskId, secundariasTaskIds]);
+
+  const handleToggleAutoSync = (enabled: boolean) => {
+    setAutoSyncEnabled(enabled);
+    try {
+      localStorage.setItem("taskos_auto_sync_enabled", enabled ? "true" : "false");
+    } catch (_) {}
+    if (enabled) {
+      setSecondsUntilSync(autoSyncInterval);
+      handleForceSync(true);
+    }
+  };
+
+  const handleChangeAutoSyncInterval = (newInterval: number) => {
+    setAutoSyncInterval(newInterval);
+    setSecondsUntilSync(newInterval);
+    try {
+      localStorage.setItem("taskos_auto_sync_interval", newInterval.toString());
+    } catch (_) {}
+  };
+
+  const handleUpdateNotifConfig = (updates: Partial<NotificationSettings>) => {
+    setNotifConfig((prev) => {
+      const next = { ...prev, ...updates };
+      try {
+        localStorage.setItem("taskos_notification_config", JSON.stringify(next));
+      } catch (_) {}
+      return next;
+    });
   };
 
   // Solicitudes & Centro de Notificaciones Handlers
@@ -1445,7 +1597,28 @@ export default function App() {
         return t;
       })
     );
-    playChime(newStatus === "Completado" ? "work_done" : "tick");
+    if (newStatus === "Completado") {
+      const isMutedByDnd = notifConfig.focusDoNotDisturb && isPomodoroActive;
+      if (notifConfig.soundChimes && !isMutedByDnd) {
+        playChime(notifConfig.soundType || "bell", { volume: notifConfig.soundVolume });
+      }
+      if (
+        notifConfig.taskCompleted &&
+        typeof window !== "undefined" &&
+        "Notification" in window &&
+        Notification.permission === "granted"
+      ) {
+        try {
+          const finishedTask = tasks.find((item) => item.id === id);
+          new Notification("✅ Tarea Completada — Task-OS", {
+            body: finishedTask ? finishedTask.tarea : `Tarea #${id} marcada como completada`,
+            icon: "/icon-192.svg",
+          });
+        } catch (_) {}
+      }
+    } else {
+      playChime("tick", { volume: notifConfig.soundVolume });
+    }
   };
 
   const handleToggleStatus = (id: number) => {
@@ -2274,7 +2447,9 @@ export default function App() {
         syncStatus={syncStatus}
         isPushActive={isPushActive}
         unreadSolicitudesCount={solicitudes.filter((s) => !s.leida || s.estado === "Nueva").length}
-        onForceSync={handleForceSync}
+        tasksCount={tasks.length}
+        onForceSync={() => handleForceSync(false)}
+        onChangeEmail={handleChangeSyncEmail}
         onOpenQRAndCloudSync={() => setIsSyncModalOpen(true)}
         onOpenGoogleWorkspace={() => setIsWorkspaceModalOpen(true)}
         onOpenNotifications={() => setIsNotificationsModalOpen(true)}
@@ -2283,6 +2458,19 @@ export default function App() {
         onOpenTags={() => setIsTagsModalOpen(true)}
         onNavigateToWorkspace={(ws) => setCurrentWorkspace(ws)}
         onResetLedger={handleResetLedger}
+        autoSyncEnabled={autoSyncEnabled}
+        onToggleAutoSync={handleToggleAutoSync}
+        autoSyncInterval={autoSyncInterval}
+        onChangeAutoSyncInterval={handleChangeAutoSyncInterval}
+        secondsUntilSync={secondsUntilSync}
+        lastSyncTime={lastSyncTime}
+        syncHistory={syncHistory}
+        notifConfig={notifConfig}
+        onUpdateNotifConfig={handleUpdateNotifConfig}
+        onSendTestNotification={() => {
+          const tone = notifConfig.soundType || "bell";
+          playChime(tone as any, { volume: notifConfig.soundVolume });
+        }}
       />
 
       {/* Footer */}

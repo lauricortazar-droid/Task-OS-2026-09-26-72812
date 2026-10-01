@@ -210,6 +210,18 @@ const portIndex = args.indexOf("--port");
 const portArg = portIndex !== -1 && args[portIndex + 1] ? parseInt(args[portIndex + 1], 10) : null;
 const PORT = portArg || (process.env.PORT ? parseInt(process.env.PORT, 10) : 3000);
 
+// Global CORS Middleware (Handles Google Gemini, Claude, Web Clients and Preflight requests)
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept, x-session-id, mcp-session-id, Range");
+  res.setHeader("Access-Control-Expose-Headers", "*");
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
+
 app.use(express.json({ limit: "25mb" }));
 
 // Cloud sync persistent store directory
@@ -251,7 +263,8 @@ function saveSyncStore(store: Record<string, CloudSyncRecord>) {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(SYNC_FILE, JSON.stringify(store, null, 2), "utf8");
+    const sanitizedJson = JSON.stringify(store, null, 2).replace(/github_pat_[a-zA-Z0-9_]+/g, "token_redacted");
+    fs.writeFileSync(SYNC_FILE, sanitizedJson, "utf8");
   } catch (err) {
     console.error("Error saving sync store:", err);
   }
@@ -337,7 +350,7 @@ app.get("/api/sync/pull", (req: Request, res: Response) => {
     const rawEmail = (req.query.email as string) || "";
     const cleanEmail = rawEmail.trim().toLowerCase();
     if (!cleanEmail) {
-      return res.status(400).json({ error: "Email is required for synchronization" });
+      return res.status(400).json({ success: false, error: "Email is required for synchronization" });
     }
 
     const store = getSyncStore();
@@ -345,19 +358,126 @@ app.get("/api/sync/pull", (req: Request, res: Response) => {
 
     if (record) {
       return res.json({
+        success: true,
         exists: true,
         data: record,
       });
     }
 
     return res.json({
+      success: true,
       exists: false,
       data: null,
       message: "No cloud sync data found for this email yet.",
     });
   } catch (err: any) {
     console.error("Error pulling sync data:", err);
-    return res.status(500).json({ error: err.message || "Failed to pull cloud sync data" });
+    return res.status(500).json({ success: false, error: err.message || "Failed to pull cloud sync data" });
+  }
+});
+
+// Device PIN Pairing store (6-digit codes for quick mobile pairing, expires in 15 mins)
+interface DevicePairingCodeRecord {
+  code: string;
+  email: string;
+  createdAt: number;
+}
+const activePairingCodes = new Map<string, DevicePairingCodeRecord>();
+
+// Generate 6-digit Device Pairing Code
+app.post("/api/sync/pair-code/generate", (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const cleanEmail = (email || "").trim().toLowerCase();
+    if (!cleanEmail) {
+      return res.status(400).json({ success: false, error: "Email requerido para generar código de enlace móvil." });
+    }
+
+    // Clean up expired codes (> 15 minutes)
+    const now = Date.now();
+    for (const [code, item] of activePairingCodes.entries()) {
+      if (now - item.createdAt > 15 * 60 * 1000) {
+        activePairingCodes.delete(code);
+      }
+    }
+
+    const rawCode = Math.floor(100000 + Math.random() * 900000).toString();
+    activePairingCodes.set(rawCode, {
+      code: rawCode,
+      email: cleanEmail,
+      createdAt: now,
+    });
+
+    return res.json({
+      success: true,
+      code: `${rawCode.slice(0, 3)}-${rawCode.slice(3)}`,
+      rawCode,
+      email: cleanEmail,
+      expiresInSeconds: 900,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Verify 6-digit Device Pairing Code
+app.post("/api/sync/pair-code/verify", (req: Request, res: Response) => {
+  try {
+    const { code } = req.body;
+    const cleanCode = (code || "").toString().replace(/\D/g, "");
+    if (!cleanCode || cleanCode.length !== 6) {
+      return res.status(400).json({ success: false, error: "Ingresa un código de enlace válido de 6 dígitos." });
+    }
+
+    const item = activePairingCodes.get(cleanCode);
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: "Código de enlace no encontrado o expirado. Genera uno nuevo en tu computadora o dispositivo principal.",
+      });
+    }
+
+    if (Date.now() - item.createdAt > 15 * 60 * 1000) {
+      activePairingCodes.delete(cleanCode);
+      return res.status(410).json({
+        success: false,
+        error: "El código de enlace ha expirado. Por favor genera un nuevo código.",
+      });
+    }
+
+    const store = getSyncStore();
+    const record = store[item.email] || null;
+
+    return res.json({
+      success: true,
+      email: item.email,
+      data: record,
+      message: `¡Dispositivo vinculado con éxito a ${item.email}!`,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Health check and connection test endpoint for Cloud Sync
+app.get("/api/sync/health", (req: Request, res: Response) => {
+  try {
+    const store = getSyncStore();
+    const queryEmail = (req.query.email as string || "").trim().toLowerCase();
+    const userRecord = queryEmail ? store[queryEmail] : null;
+
+    return res.json({
+      success: true,
+      status: "online",
+      serverTimestamp: new Date().toISOString(),
+      email: queryEmail || undefined,
+      isAccountFound: !!userRecord,
+      tasksCount: userRecord?.tasks?.length || 0,
+      lastSyncedAt: userRecord?.updatedAt || null,
+      totalRegisteredAccounts: Object.keys(store).length,
+    });
+  } catch (err: any) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -383,11 +503,18 @@ app.post("/api/sync/push", (req: Request, res: Response) => {
     const store = getSyncStore();
     const now = new Date().toISOString();
 
+    const sanitizedUrlLibrary = Array.isArray(urlLibrary)
+      ? urlLibrary.map((u: any) => ({
+          ...u,
+          descripcion: (u.descripcion || "").replace(/github_pat_[a-zA-Z0-9_]+/g, "[TOKEN_REDACTED]"),
+        }))
+      : undefined;
+
     const record: CloudSyncRecord = {
       email: cleanEmail,
       tasks: Array.isArray(tasks) ? tasks : [],
       globalResources: Array.isArray(globalResources) ? globalResources : undefined,
-      urlLibrary: Array.isArray(urlLibrary) ? urlLibrary : undefined,
+      urlLibrary: sanitizedUrlLibrary,
       contacts: Array.isArray(contacts) ? contacts : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
       esencialTaskId: typeof esencialTaskId === "number" ? esencialTaskId : null,
@@ -1441,37 +1568,63 @@ function setMcpCorsHeaders(res: Response) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, Accept");
 }
 
-app.options("/mcp", (_req: Request, res: Response) => {
+app.options(["/mcp", "/sse", "/mcp/sse", "/api/mcp", "/api/sse", "/message", "/mcp/message"], (_req: Request, res: Response) => {
   setMcpCorsHeaders(res);
   res.status(204).end();
 });
 
-app.options("/mcp/sse", (_req: Request, res: Response) => {
+// GET /sse and GET /mcp (SSE endpoint + web status page)
+app.get(["/sse", "/mcp/sse", "/api/sse"], (req: Request, res: Response) => {
   setMcpCorsHeaders(res);
-  res.status(204).end();
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "ais-pre-dwgikgfu64evytiqb4nzms-347865637985.us-east1.run.app";
+  const baseUrl = `${proto}://${host}`;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.flushHeaders?.();
+
+  const sessionId = `mcp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  mcpSessions.set(sessionId, res);
+
+  // Send standard MCP endpoint event (providing absolute URL for Gemini and external clients)
+  res.write(`event: endpoint\ndata: ${baseUrl}/mcp/message?sessionId=${sessionId}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": keep-alive\n\n");
+    } catch (_) {
+      clearInterval(heartbeat);
+    }
+  }, 15000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    mcpSessions.delete(sessionId);
+  });
 });
 
-app.options("/mcp/message", (_req: Request, res: Response) => {
-  setMcpCorsHeaders(res);
-  res.status(204).end();
-});
-
-// GET /mcp and GET /mcp/sse (SSE endpoint + web status page)
-app.get(["/mcp", "/mcp/sse"], (req: Request, res: Response) => {
+app.get(["/mcp", "/api/mcp"], (req: Request, res: Response) => {
   setMcpCorsHeaders(res);
 
-  // If client requests SSE stream (standard MCP transport)
-  if (req.headers.accept?.includes("text/event-stream") || req.path.endsWith("/sse") || req.query.transport === "sse") {
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  const host = req.headers["x-forwarded-host"] || req.headers.host || "ais-pre-dwgikgfu64evytiqb4nzms-347865637985.us-east1.run.app";
+  const baseUrl = `${proto}://${host}`;
+
+  // If client requests SSE stream or query has transport=sse
+  if (req.headers.accept?.includes("text/event-stream") || req.query.transport === "sse" || req.query.sse === "true") {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
+    res.setHeader("Access-Control-Allow-Origin", "*");
     res.flushHeaders?.();
 
     const sessionId = `mcp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     mcpSessions.set(sessionId, res);
 
-    // Send standard MCP endpoint event
-    res.write(`event: endpoint\ndata: /mcp/message?sessionId=${sessionId}\n\n`);
+    res.write(`event: endpoint\ndata: ${baseUrl}/mcp/message?sessionId=${sessionId}\n\n`);
 
     const heartbeat = setInterval(() => {
       try {
@@ -1488,10 +1641,22 @@ app.get(["/mcp", "/mcp/sse"], (req: Request, res: Response) => {
     return;
   }
 
+  // If client requests JSON representation (or Gemini client checks options)
+  if (req.headers.accept?.includes("application/json") || req.query.format === "json") {
+    return res.json({
+      status: "online",
+      server: "Task-OS Model Context Protocol Server",
+      protocolVersion: "2024-11-05",
+      sseEndpoint: `${baseUrl}/sse`,
+      messageEndpoint: `${baseUrl}/mcp/message`,
+      toolsCount: MCP_TOOLS.length,
+      tools: MCP_TOOLS.map((t) => ({ name: t.name, description: t.description })),
+    });
+  }
+
   // Friendly web browser page
-  const proto = req.headers["x-forwarded-proto"] || "https";
-  const host = req.headers["x-forwarded-host"] || req.headers.host || "ais-pre-dwgikgfu64evytiqb4nzms-347865637985.us-east1.run.app";
-  const mcpUrl = `${proto}://${host}/mcp`;
+  const mcpUrl = `${baseUrl}/mcp`;
+  const sseUrl = `${baseUrl}/sse`;
 
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(`
@@ -1692,8 +1857,7 @@ async function handleMcpJsonRpc(req: Request, res: Response) {
   }
 }
 
-app.post("/mcp", handleMcpJsonRpc);
-app.post("/mcp/message", handleMcpJsonRpc);
+app.post(["/mcp", "/sse", "/message", "/mcp/message", "/sse/message", "/api/mcp", "/api/mcp/message"], handleMcpJsonRpc);
 
 // Executive Router: URL Metadata extraction & 3-5 indexing keywords generation
 app.post("/api/router/extract-metadata", async (req: Request, res: Response) => {
